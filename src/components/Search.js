@@ -2,10 +2,12 @@ import React, { Component } from 'react'
 import * as actions from '../actions'
 import { connect } from 'react-redux'
 import CrsCode from './constants'
+import Result from './Result'
 
 class Search extends Component {
   state = {
-    value: ''
+    value: '',
+    results: []
   }
 
   componentDidMount() {
@@ -25,10 +27,12 @@ class Search extends Component {
     event.preventDefault();
     const startingPointCrs = this.findCrsSuggestionsByName(startingPoint);
     const destinationCrs = this.findCrsSuggestionsByName(destination);
-    const s = this.props.fetchRoutes(startingPointCrs[0].crsCode, destinationCrs[0].crsCode);
-    console.log('s=', s);
-    localStorage.setItem('routes', JSON.stringify(s))
+    this.props.fetchRoutes(startingPointCrs[0].crsCode, destinationCrs[0].crsCode);
+    localStorage.setItem('routes', JSON.stringify({startingPoint, destination}))
+    //this.setState({results: this.state.results.concat(JSON.parse(localStorage.getItem("routes")))})
+
   }
+
 
   onChange = e => {
       this.setState({
@@ -38,40 +42,26 @@ class Search extends Component {
 
   render() {
     const services = (this.props.routes[0] ? this.props.routes[0].trainServices : null);
-    console.log('services: ', services);
-    var storedValue = localStorage.getItem("routes");
-    console.log('storedValue: ', storedValue);
-
+    const result = JSON.parse(localStorage.getItem("routes"))
+    console.log('result!!!!', result)
+    //console.log('results', this.state.results);
     return (
-      <div>
-      <form onSubmit={this.handleSubmitForm}>
-        <label>From</label>
-        <input onChange={this.onChange} value={this.state.startingPoint} name='startingPoint'/>
-        <label>To</label>
-        <input onChange={this.onChange} value={this.state.destination} name='destination'/>
-        <button type='sumbit'>Search!</button>
-      </form>
-      {
+      <div className='panel'>
+        <div className="panel-search">
+          <form onSubmit={this.handleSubmitForm} className='form-search'>
+            <div className='input-search'>
+            <label>From</label>
+            <input onChange={this.onChange} value={this.state.startingPoint} name='startingPoint'/>
+            </div>
+            <div className='input-search'>
+            <label>To</label>
+            <input onChange={this.onChange} value={this.state.destination} name='destination'/>
+            </div>
+            <button className='btn' type='sumbit'>Search!</button>
+          </form>
+       </div>
+       <Result services={services} />
 
-          services &&
-          <div>
-          <h2>{`${this.props.routes[0].locationName} - ${this.props.routes[0].filterLocationName}`}</h2>
-          {
-            this.props.routes[0].trainServices.map(train => {
-              return (
-                <div>
-                  <p>{`The next train will arrive at ${train.sta}`}</p>
-                  <p>{`The next train will arrive at ${train.operator}`}</p>
-                  <p>{`The next train will arrive at ${train.platform}`}</p>
-                  {  train.delayReason !== null ? <p>{` ${train.delayReason}`}</p> : <p>There are no delays</p> }
-                </div>
-              )
-            })
-          }
-
-        </div>
-      }
-      {storedValue}
       </div>
     )
   }
